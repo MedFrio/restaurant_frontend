@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../api/axiosInstance";
+import Header from "../components/Header"; 
+
 
 export default function Chef() {
   const [orders, setOrders] = useState([]);
@@ -34,6 +36,8 @@ export default function Chef() {
   }, []);
 
   return (
+        <div>
+      <Header /> {/* Ajout du header */}
     <div className="p-6 max-w-xl mx-auto">
       <h1 className="text-2xl font-bold mb-4">Tableau de bord cuisine</h1>
 
@@ -61,6 +65,7 @@ export default function Chef() {
       </button>
 
       {message && <p className="mt-4 text-green-600 text-center">{message}</p>}
+    </div>
     </div>
   );
 }

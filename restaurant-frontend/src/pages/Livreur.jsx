@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../api/axiosInstance";
+import Header from "../components/Header"; 
+
 
 export default function Livreur() {
   const [deliveries, setDeliveries] = useState([]);
@@ -34,6 +36,8 @@ export default function Livreur() {
   }, []);
 
   return (
+        <div>
+      <Header /> {/* Ajout du header */}
     <div className="p-6 max-w-xl mx-auto">
       <h1 className="text-2xl font-bold mb-4">Commandes à livrer</h1>
 
@@ -61,6 +65,7 @@ export default function Livreur() {
       </button>
 
       {message && <p className="mt-4 text-green-600 text-center">{message}</p>}
+    </div>
     </div>
   );
 }

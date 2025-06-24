@@ -1,24 +1,39 @@
 import { useState, useEffect } from "react";
 import { api } from "../api/axiosInstance";
+import { useAuth } from "../context/AuthContext";
+import Header from "../components/Header"; 
 
 export default function Client() {
   const [menu, setMenu] = useState([]);
   const [selectedItems, setSelectedItems] = useState([]);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const { token, clientId } = useAuth();
+  const [clientInfo, setClientInfo] = useState(null);
 
+
+
+  // Récupération du menu
   useEffect(() => {
-    // Récupération du menu depuis l'API Gateway
-    api.get("/menu")
+    api.get("/order-api/menu")
       .then((res) => {
-        if (res.data.menu) {
-          setMenu(res.data.menu);
+        if (Array.isArray(res.data)) {
+          setMenu(res.data);
         } else {
-          setError("Aucun menu trouvé");
+          setError("Menu introuvable");
         }
       })
-      .catch(() => setError("Service indisponible"));
+      .catch(() => setError("Erreur de connexion au service Menu"));
   }, []);
+
+  // Récupération des infos client
+  useEffect(() => {
+    if (clientId) {
+      api.get(`/client-api/clients/${clientId}`)
+        .then((res) => setClientInfo(res.data))
+        .catch(() => setError("Impossible de récupérer les infos client"));
+    }
+  }, [clientId]);
 
   const toggleItem = (item) => {
     if (selectedItems.includes(item)) {
@@ -34,23 +49,46 @@ export default function Client() {
       return;
     }
 
+    if (!clientInfo) {
+      setMessage("Informations client manquantes");
+      return;
+    }
+
+    const items = selectedItems.map((item) => ({
+      menuId: item.id,
+      quantite: 1,
+    }));
+
     try {
-      const res = await api.post("/orders", {
-        client_id: "123", // ou récupérer dynamiquement selon session
-        items: selectedItems,
-      });
-      if (res.data.order_id) {
-        setMessage(`Commande envoyée ! ID: ${res.data.order_id}`);
+      const res = await api.post(
+        "/order-api/commandes",
+        {
+          clientId,
+          items,
+          adresse: clientInfo.address,
+          telephone: clientInfo.phone
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (res.data?.id) {
+        setMessage(`Commande envoyée ! ID : ${res.data.id}`);
         setSelectedItems([]);
       } else {
-        setMessage("Erreur lors de la création de la commande");
+        setMessage("Échec de la commande.");
       }
     } catch {
-      setMessage("Erreur : le service commande est indisponible");
+      setMessage("Service commande indisponible.");
     }
   };
 
   return (
+    <div>
+      <Header /> {/* Ajout du header */}
     <div className="p-6 max-w-xl mx-auto">
       <h1 className="text-2xl font-bold mb-4">Menu du jour</h1>
 
@@ -59,14 +97,15 @@ export default function Client() {
       <ul className="space-y-2">
         {menu.map((item) => (
           <li
-            key={item}
-            className={`flex justify-between items-center p-3 border rounded ${
+            key={item.id}
+            className={`flex justify-between items-center p-3 border rounded text-gray-900 ${
               selectedItems.includes(item)
                 ? "bg-green-100 border-green-400"
                 : "bg-white"
             }`}
           >
-            <span>{item}</span>
+            <span>{item.nom} - {item.prix} €</span>
+
             <button
               onClick={() => toggleItem(item)}
               className="text-sm text-blue-600 underline"
@@ -85,6 +124,7 @@ export default function Client() {
       </button>
 
       {message && <p className="mt-4 text-center text-green-600">{message}</p>}
+    </div>
     </div>
   );
 }

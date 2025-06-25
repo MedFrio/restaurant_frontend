@@ -6,6 +6,7 @@ import Livreur from "./pages/Livreur";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import SignUp from "./pages/SignUp";
 import Accueil from "./pages/Accueil";
+import MesCommandes from "./pages/MesCommandes";
 
 // Route protégée pour chaque rôle
 function ProtectedRoute({ roleRequired, children }) {
@@ -53,6 +54,14 @@ export default function App() {
             element={
               <ProtectedRoute roleRequired="client">
                 <Client />
+              </ProtectedRoute>
+            }
+          />
+                    <Route
+            path="/mes-commandes"
+            element={
+              <ProtectedRoute roleRequired="client">
+                <MesCommandes />
               </ProtectedRoute>
             }
           />

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { api } from "../api/axiosInstance";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
@@ -69,6 +69,13 @@ export default function Login() {
         >
           Se connecter
         </button>
+
+        <p className="mt-4 text-sm text-center text-gray-700">
+          Vous n’avez pas de compte ?{" "}
+          <Link to="/signup" className="text-blue-600 hover:underline">
+            Créez-en un
+          </Link>
+        </p>
       </form>
     </div>
   );

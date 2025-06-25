@@ -31,6 +31,7 @@ export default function Accueil() {
             <li><Link to="/">/</Link> – Connexion</li>
             <li><Link to="/signup">/signup</Link> – Inscription client</li>
             <li><Link to="/client">/client</Link> – Interface client (commande)</li>
+            <li><Link to="/mes-commandes">/mes-commandes</Link> – Historique des commandes</li>
             <li><Link to="/chef">/chef</Link> – Interface chef (préparation)</li>
             <li><Link to="/livreur">/livreur</Link> – Interface livreur (livraison)</li>
           </ul>

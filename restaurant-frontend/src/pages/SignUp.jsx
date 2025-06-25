@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { api } from "../api/axiosInstance";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom"; // 👈 ici
 
 export default function SignUp() {
   const navigate = useNavigate();
@@ -13,7 +13,9 @@ export default function SignUp() {
     address: "",
     city: "",
     postalCode: "",
+    role: "CLIENT"
   });
+
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -29,7 +31,7 @@ export default function SignUp() {
       const res = await api.post("/client-api/clients", form);
       if (res.status === 201 || res.data?.id) {
         setSuccess("Compte créé avec succès ! Redirection...");
-        setTimeout(() => navigate("/login"), 1500);
+        setTimeout(() => navigate("/"), 1500);
       } else {
         setError("Erreur lors de la création du compte.");
       }
@@ -44,7 +46,9 @@ export default function SignUp() {
         onSubmit={handleSubmit}
         className="bg-white p-8 shadow-md rounded w-full max-w-md"
       >
-        <h2 className="text-2xl font-semibold mb-4 text-center text-gray-900">Créer un compte</h2>
+        <h2 className="text-2xl font-semibold mb-4 text-center text-gray-900">
+          Créer un compte
+        </h2>
 
         <div className="grid grid-cols-2 gap-4">
           <input name="firstName" placeholder="Prénom" onChange={handleChange} className="p-2 border rounded" />
@@ -59,12 +63,31 @@ export default function SignUp() {
         <input name="city" placeholder="Ville" onChange={handleChange} className="w-full mt-2 p-2 border rounded" />
         <input name="postalCode" placeholder="Code postal" onChange={handleChange} className="w-full mt-2 p-2 border rounded" />
 
+        <select
+          name="role"
+          value={form.role}
+          onChange={handleChange}
+          className="w-full mt-2 p-2 border rounded"
+        >
+          <option value="CLIENT">Client</option>
+          <option value="CHEF">Chef</option>
+          <option value="LIVREUR">Livreur</option>
+          <option value="ADMIN">Administrateur</option>
+        </select>
+
         {error && <p className="text-red-500 mt-2 text-sm">{error}</p>}
         {success && <p className="text-green-600 mt-2 text-sm">{success}</p>}
 
         <button type="submit" className="w-full mt-4 bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">
           S’inscrire
         </button>
+
+        <p className="mt-4 text-sm text-center text-gray-700">
+          Vous avez déjà un compte ?{" "}
+          <Link to="/" className="text-blue-600 hover:underline">
+            Connectez-vous
+          </Link>
+        </p>
       </form>
     </div>
   );

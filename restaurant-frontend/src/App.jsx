@@ -7,18 +7,23 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import SignUp from "./pages/SignUp";
 import Accueil from "./pages/Accueil";
 import MesCommandes from "./pages/MesCommandes";
+import MonCompte from "./pages/MonCompte";
+import Admin from "./pages/Admin";
 
-// Route protégée pour chaque rôle
+// Route protégée
 function ProtectedRoute({ roleRequired, children }) {
   const { role } = useAuth();
 
   if (!role) return <Navigate to="/" />;
-  if (role !== roleRequired) return <Navigate to={`/${role}`} />;
+
+  if (roleRequired && role !== roleRequired) {
+    return <Navigate to={`/${role}`} />;
+  }
 
   return children;
 }
 
-// Si connecté, empêche l'accès aux pages de login/signup
+// Route publique (non accessible si connecté)
 function PublicOnlyRoute({ children }) {
   const { role } = useAuth();
   if (role) return <Navigate to="/accueil" />;
@@ -30,7 +35,8 @@ export default function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          {/* Routes publiques avec redirection si connecté */}
+
+          {/* Routes publiques */}
           <Route
             path="/"
             element={
@@ -57,7 +63,7 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-                    <Route
+          <Route
             path="/mes-commandes"
             element={
               <ProtectedRoute roleRequired="client">
@@ -82,10 +88,29 @@ export default function App() {
             }
           />
 
-          {/* Accueil accessible à tous connectés */}
+          {/* Page mon-compte accessible à tous les rôles */}
+          <Route
+            path="/mon-compte"
+            element={
+              <ProtectedRoute>
+                <MonCompte />
+              </ProtectedRoute>
+            }
+          />
+          {/* Page admin accessible uniquement aux admins */}
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute roleRequired="admin">
+                <Admin />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Accueil accessible à tout utilisateur connecté */}
           <Route path="/accueil" element={<Accueil />} />
 
-          {/* fallback */}
+          {/* Fallback */}
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </BrowserRouter>

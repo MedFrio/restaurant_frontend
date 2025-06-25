@@ -9,10 +9,10 @@ export default function MesCommandes() {
   const [commandes, setCommandes] = useState([]);
   const [menuMap, setMenuMap] = useState({});
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Charger tous les plats pour faire une map id -> nom
     api.get("/order-api/menu")
       .then((res) => {
         const map = {};
@@ -24,7 +24,7 @@ export default function MesCommandes() {
       .catch(() => console.error("Impossible de charger le menu"));
   }, []);
 
-  useEffect(() => {
+  const fetchCommandes = () => {
     if (clientId) {
       api.get("/order-api/commandes", {
         headers: {
@@ -37,7 +37,27 @@ export default function MesCommandes() {
         })
         .catch(() => setError("Impossible de charger les commandes"));
     }
+  };
+
+  useEffect(() => {
+    fetchCommandes();
   }, [clientId, token]);
+
+  const annulerCommande = async (commandeId) => {
+    try {
+      const res = await api.patch(`/order-api/commandes/${commandeId}/status`, {
+        status: "ANNULEE",
+      });
+      if (res.status === 200) {
+        setMessage(`Commande ${commandeId} annulée`);
+        fetchCommandes(); // Recharger les commandes
+      } else {
+        setMessage("Erreur lors de l'annulation");
+      }
+    } catch {
+      setMessage("Erreur réseau lors de l'annulation");
+    }
+  };
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -54,6 +74,7 @@ export default function MesCommandes() {
         </div>
 
         {error && <p className="text-red-600">{error}</p>}
+        {message && <p className="text-green-600 text-sm mb-4 text-center">{message}</p>}
 
         {commandes.length === 0 ? (
           <p className="text-gray-600">Aucune commande trouvée.</p>
@@ -81,6 +102,15 @@ export default function MesCommandes() {
                     </li>
                   ))}
                 </ul>
+
+                {["EN_ATTENTE", "EN_PREPARATION"].includes(commande.status) && (
+                  <button
+                    onClick={() => annulerCommande(commande.id)}
+                    className="mt-3 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition text-sm"
+                  >
+                    Annuler la commande
+                  </button>
+                )}
               </div>
             ))}
           </div>

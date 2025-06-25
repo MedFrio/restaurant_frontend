@@ -34,6 +34,7 @@ export default function Accueil() {
             <li><Link to="/mes-commandes">/mes-commandes</Link> – Historique des commandes</li>
             <li><Link to="/chef">/chef</Link> – Interface chef (préparation)</li>
             <li><Link to="/livreur">/livreur</Link> – Interface livreur (livraison)</li>
+            <li><Link to="/admin">/admin</Link> – Interface admin (gestion)</li>
           </ul>
         </section>
 

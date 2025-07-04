@@ -67,6 +67,36 @@ export default function Chef() {
     }
   };
 
+const createLivraison = async (order) => {
+  try {
+    const res = await api.post("/delivery-api/livraisons", {
+      commandeId: order.id,
+      adresseDepart: "Restaurant ABC, Paris",
+      adresseArrivee: order.adresse,
+      clientNom: "Client",
+      clientTelephone: order.telephone,
+      prixLivraison: 5,
+      distanceKm: 2.5,
+      tempsEstime: 20,
+      commentaires: "Livraison standard"
+    });
+
+    if (res.status === 201) {
+      setMessage(`✅ Livraison créée pour commande ${order.id}`);
+      fetchOrders(); // <-- recharge les commandes
+    } else {
+      setMessage("❌ Erreur inattendue lors de la création");
+    }
+  } catch (err) {
+    if (err.response?.status === 400) {
+      setMessage(`⚠ Livraison déjà existante pour commande ${order.id}`);
+    } else {
+      setMessage("❌ Erreur lors de la création de la livraison");
+    }
+  }
+};
+
+
   useEffect(() => {
     fetchOrders();
     fetchMenu();
@@ -77,8 +107,6 @@ export default function Chef() {
       <Header />
       <div className="p-6 max-w-5xl mx-auto text-gray-900">
         <h1 className="text-3xl font-bold mb-6 text-yellow-700">👨‍🍳 Tableau de bord cuisine</h1>
-
-
 
         {/* Liste des commandes */}
         <ul className="space-y-4 mb-10">
@@ -125,6 +153,15 @@ export default function Chef() {
                   </button>
                 )}
 
+                {order.status === "PRETE" && (
+                  <button
+                    onClick={() => createLivraison(order)}
+                    className="bg-purple-600 text-white px-3 py-1 rounded hover:bg-purple-700"
+                  >
+                    Affecter à un livreur
+                  </button>
+                )}
+
                 {order.status !== "LIVREE" && order.status !== "ANNULEE" && (
                   <button
                     onClick={() => updateStatus(order.id, "ANNULEE")}
@@ -138,56 +175,54 @@ export default function Chef() {
           ))}
         </ul>
 
-                {error && <p className="text-red-600 mb-4">{error}</p>}
-        {message && (
-          <p
-            className={`mb-4 text-center font-medium ${
-              message.startsWith("✅") ? "text-green-600" : "text-red-600"
-            }`}
-          >
-            {message}
-          </p>
-        )}
+{(message || error) && (
+  <div
+    className={`fixed bottom-4 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded shadow-lg transition-all duration-500
+      ${message?.startsWith("✅") ? "bg-green-500 text-white" :
+      message || error ? "bg-red-500 text-white" : ""}`
+    }
+    style={{ zIndex: 1000 }}
+  >
+    {message || error}
+  </div>
+)}
+
 
         {/* Ajouter un plat */}
         <section className="mb-10">
           <h2 className="text-xl font-semibold mb-4">➕ Ajouter un plat</h2>
           <div className="grid grid-cols-2 gap-4">
-<input
-  className="p-2 border rounded bg-white text-black placeholder:text-gray-500"
-  placeholder="Nom"
-  value={newDish.nom}
-  onChange={(e) => setNewDish({ ...newDish, nom: e.target.value })}
-/>
-
-<input
-  className="p-2 border rounded bg-white text-black placeholder:text-gray-500"
-  placeholder="Description"
-  value={newDish.description}
-  onChange={(e) => setNewDish({ ...newDish, description: e.target.value })}
-/>
-
-<input
-  className="p-2 border rounded bg-white text-black placeholder:text-gray-500"
-  placeholder="Prix"
-  type="number"
-  value={newDish.prix}
-  onChange={(e) =>
-    setNewDish({ ...newDish, prix: parseFloat(e.target.value) || 0 })
-  }
-/>
-
-<select
-  className="p-2 border rounded bg-white text-black"
-  value={newDish.categorie}
-  onChange={(e) => setNewDish({ ...newDish, categorie: e.target.value })}
->
-  <option value="ENTREE">Entrée</option>
-  <option value="PLAT_PRINCIPAL">Plat Principal</option>
-  <option value="DESSERT">Dessert</option>
-  <option value="BOISSON">Boisson</option>
-</select>
-
+            <input
+              className="p-2 border rounded bg-white text-black placeholder:text-gray-500"
+              placeholder="Nom"
+              value={newDish.nom}
+              onChange={(e) => setNewDish({ ...newDish, nom: e.target.value })}
+            />
+            <input
+              className="p-2 border rounded bg-white text-black placeholder:text-gray-500"
+              placeholder="Description"
+              value={newDish.description}
+              onChange={(e) => setNewDish({ ...newDish, description: e.target.value })}
+            />
+            <input
+              className="p-2 border rounded bg-white text-black placeholder:text-gray-500"
+              placeholder="Prix"
+              type="number"
+              value={newDish.prix}
+              onChange={(e) =>
+                setNewDish({ ...newDish, prix: parseFloat(e.target.value) || 0 })
+              }
+            />
+            <select
+              className="p-2 border rounded bg-white text-black"
+              value={newDish.categorie}
+              onChange={(e) => setNewDish({ ...newDish, categorie: e.target.value })}
+            >
+              <option value="ENTREE">Entrée</option>
+              <option value="PLAT_PRINCIPAL">Plat Principal</option>
+              <option value="DESSERT">Dessert</option>
+              <option value="BOISSON">Boisson</option>
+            </select>
           </div>
           <button
             onClick={handleAddDish}

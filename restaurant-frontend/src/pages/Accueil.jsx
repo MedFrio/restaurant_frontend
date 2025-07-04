@@ -1,11 +1,13 @@
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import Header from "../components/Header";
 
 export default function Accueil() {
   const { role } = useAuth();
 
   return (
-    <div className="min-h-screen bg-white text-gray-800 p-8">
+    <div className="bg-gray-50 min-h-screen">
+      <Header/>
       <div className="max-w-4xl mx-auto bg-gray-100 rounded-xl shadow-md p-8">
         <h1 className="text-4xl font-bold text-blue-700 mb-6 text-center">
           🍽️ Projet Microservices - Restaurant

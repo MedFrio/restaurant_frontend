@@ -1,14 +1,14 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import Login from "./pages/Login";
-import Client from "./pages/Client";
-import Chef from "./pages/Chef";
-import Livreur from "./pages/Livreur";
-import { AuthProvider, useAuth } from "./context/AuthContext";
-import SignUp from "./pages/SignUp";
-import Accueil from "./pages/Accueil";
-import MesCommandes from "./pages/MesCommandes";
-import MonCompte from "./pages/MonCompte";
-import Admin from "./pages/Admin";
+import Login from "./Login";
+import Client from "./Client";
+import Chef from "./Chef";
+import Livreur from "./Livreur";
+import { AuthProvider, useAuth } from "../context/AuthContext";
+import SignUp from "./SignUp";
+import Accueil from "./Accueil";
+import MesCommandes from "./MesCommandes";
+import Admin from "./Admin";
+
 
 // Route protégée
 function ProtectedRoute({ roleRequired, children }) {

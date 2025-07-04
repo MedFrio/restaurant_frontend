@@ -14,20 +14,16 @@ export default function Livreur() {
   useEffect(() => {
     const initLivreur = async () => {
       try {
-        // Si déjà en localStorage
         if (livreurId) return;
 
-        // sinon appeler /livreurs pour chercher un existant (ex : filtrer par email)
         const res = await api.get("/delivery-api/livreurs");
         const existing = res.data.find(l => l.email === `${clientId}@delivery.com`);
-
         if (existing) {
           localStorage.setItem("livreurId", existing.id);
           setLivreurId(existing.id);
           return;
         }
 
-        // sinon créer
         const createRes = await api.post("/delivery-api/livreurs", {
           nom: firstName || "Livreur",
           prenom: "App",
@@ -61,14 +57,28 @@ export default function Livreur() {
     }
   };
 
-  const updateLivraison = async (id, newStatus) => {
+  const updateLivraison = async (id, newStatus, commandeId = null) => {
     try {
       const res = await api.patch(`/delivery-api/livraisons/${id}`, {
         statut: newStatus,
         livreurId,
       });
+
       if (res.status === 200) {
         setMessage(`✅ Livraison ${id} → ${newStatus}`);
+
+        // Si la livraison est marquée livrée, notifier la commande
+        if (newStatus === "LIVREE" && commandeId) {
+          try {
+            await api.patch(`/order-api/commandes/${commandeId}/status`, {
+              status: "LIVREE",
+            });
+            setMessage(`✅ Livraison et commande ${commandeId} marquées LIVREE`);
+          } catch {
+            setMessage("⚠ Livraison OK mais échec MAJ commande");
+          }
+        }
+
         fetchLivraisons();
       } else {
         setMessage("❌ Erreur lors de la mise à jour");
@@ -82,7 +92,7 @@ export default function Livreur() {
 
   useEffect(() => {
     fetchLivraisons();
-  }, [livreurId]); // dès qu'on a le livreurId, charger ses livraisons
+  }, [livreurId]);
 
   useEffect(() => {
     if (message || error) {
@@ -147,7 +157,7 @@ export default function Livreur() {
                   )}
                   {liv.statut === "EN_ROUTE_CLIENT" && (
                     <button
-                      onClick={() => updateLivraison(liv.id, "LIVREE")}
+                      onClick={() => updateLivraison(liv.id, "LIVREE", liv.commandeId)}
                       className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
                     >
                       Marquer comme livrée

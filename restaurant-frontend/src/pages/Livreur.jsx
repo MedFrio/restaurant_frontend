@@ -1,71 +1,183 @@
 import { useEffect, useState } from "react";
 import { api } from "../api/axiosInstance";
-import Header from "../components/Header"; 
-
+import { useAuth } from "../context/AuthContext";
+import Header from "../components/Header";
 
 export default function Livreur() {
-  const [deliveries, setDeliveries] = useState([]);
+  const { clientId, token, firstName } = useAuth();
+  const [livreurId, setLivreurId] = useState(() => localStorage.getItem("livreurId"));
+  const [livraisons, setLivraisons] = useState([]);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  const fetchDeliveries = async () => {
+  // Charger ou créer le livreur au montage
+  useEffect(() => {
+    const initLivreur = async () => {
+      try {
+        // Si déjà en localStorage
+        if (livreurId) return;
+
+        // sinon appeler /livreurs pour chercher un existant (ex : filtrer par email)
+        const res = await api.get("/delivery-api/livreurs");
+        const existing = res.data.find(l => l.email === `${clientId}@delivery.com`);
+
+        if (existing) {
+          localStorage.setItem("livreurId", existing.id);
+          setLivreurId(existing.id);
+          return;
+        }
+
+        // sinon créer
+        const createRes = await api.post("/delivery-api/livreurs", {
+          nom: firstName || "Livreur",
+          prenom: "App",
+          telephone: "+33123456789",
+          email: `${clientId}@delivery.com`,
+          motDePasse: "secret",
+          vehicule: "Scooter",
+          numeroLicence: "AUTO-GEN",
+          adresse: "Depot",
+          ville: "Ville",
+          codePostal: "00000"
+        });
+
+        localStorage.setItem("livreurId", createRes.data.id);
+        setLivreurId(createRes.data.id);
+      } catch (err) {
+        setError("❌ Erreur lors de l'initialisation du livreur");
+      }
+    };
+
+    initLivreur();
+  }, [clientId, livreurId, firstName]);
+
+  const fetchLivraisons = async () => {
+    if (!livreurId) return;
     try {
-      const res = await api.get("/delivery/assigned");
-      setDeliveries(res.data);
-    } catch (err) {
-      setError("Erreur : service livraison indisponible");
+      const res = await api.get(`/delivery-api/livraisons?livreurId=${livreurId}`);
+      setLivraisons(res.data);
+    } catch {
+      setError("Impossible de charger les livraisons");
     }
   };
 
-  const updateDelivery = async () => {
+  const updateLivraison = async (id, newStatus) => {
     try {
-      const res = await api.post("/delivery/update");
-      if (res.data.status) {
-        setMessage(`Commande ${res.data.order_id} marquée comme "${res.data.status}"`);
-        fetchDeliveries();
+      const res = await api.patch(`/delivery-api/livraisons/${id}`, {
+        statut: newStatus,
+        livreurId,
+      });
+      if (res.status === 200) {
+        setMessage(`✅ Livraison ${id} → ${newStatus}`);
+        fetchLivraisons();
       } else {
-        setMessage("Erreur lors de la mise à jour");
+        setMessage("❌ Erreur lors de la mise à jour");
       }
-    } catch (err) {
-      setMessage("Erreur : mise à jour échouée");
+    } catch {
+      setMessage("❌ Erreur réseau");
     }
   };
+
+  const cancelLivraison = (id) => updateLivraison(id, "ANNULEE");
 
   useEffect(() => {
-    fetchDeliveries();
-  }, []);
+    fetchLivraisons();
+  }, [livreurId]); // dès qu'on a le livreurId, charger ses livraisons
+
+  useEffect(() => {
+    if (message || error) {
+      const timer = setTimeout(() => {
+        setMessage("");
+        setError("");
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [message, error]);
 
   return (
-        <div>
-      <Header /> {/* Ajout du header */}
-    <div className="p-6 max-w-xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Commandes à livrer</h1>
+    <div className="bg-gray-50 min-h-screen">
+      <Header />
+      <div className="p-6 max-w-3xl mx-auto text-gray-800">
+        <h1 className="text-3xl font-bold mb-6 text-green-700">🚚 Mes livraisons</h1>
 
-      {error && <p className="text-red-500 mb-4">{error}</p>}
+        {livraisons.length === 0 ? (
+          <p className="text-gray-600">Aucune livraison pour l’instant.</p>
+        ) : (
+          <div className="space-y-6">
+            {livraisons.map((liv) => (
+              <div key={liv.id} className="bg-white p-4 border rounded shadow-sm">
+                <div className="mb-2 flex justify-between items-center">
+                  <span className="text-gray-700 font-semibold">Livraison #{liv.id}</span>
+                  <span className="text-sm px-2 py-1 bg-green-100 text-green-800 rounded">
+                    Statut : {liv.statut}
+                  </span>
+                </div>
 
-      <ul className="space-y-2">
-        {deliveries.map((d) => (
-          <li
-            key={d.order_id}
-            className="p-3 border rounded bg-white flex justify-between items-center"
+                <div className="text-sm text-gray-700 mb-2">
+                  🏠 De : {liv.adresseDepart}<br />
+                  🚪 À : {liv.adresseArrivee}<br />
+                  📞 Client : {liv.clientNom} ({liv.clientTelephone})<br />
+                  💬 {liv.commentaires}
+                </div>
+
+                <div className="flex gap-2 flex-wrap">
+                  {liv.statut === "EN_ATTENTE" && (
+                    <button
+                      onClick={() => updateLivraison(liv.id, "EN_ROUTE_RESTAURANT")}
+                      className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
+                    >
+                      Prendre la livraison
+                    </button>
+                  )}
+                  {liv.statut === "EN_ROUTE_RESTAURANT" && (
+                    <button
+                      onClick={() => updateLivraison(liv.id, "RECUPEREE")}
+                      className="bg-yellow-600 text-white px-3 py-1 rounded hover:bg-yellow-700"
+                    >
+                      Marquer comme récupérée
+                    </button>
+                  )}
+                  {liv.statut === "RECUPEREE" && (
+                    <button
+                      onClick={() => updateLivraison(liv.id, "EN_ROUTE_CLIENT")}
+                      className="bg-purple-600 text-white px-3 py-1 rounded hover:bg-purple-700"
+                    >
+                      Livrer au client
+                    </button>
+                  )}
+                  {liv.statut === "EN_ROUTE_CLIENT" && (
+                    <button
+                      onClick={() => updateLivraison(liv.id, "LIVREE")}
+                      className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
+                    >
+                      Marquer comme livrée
+                    </button>
+                  )}
+
+                  {liv.statut !== "LIVREE" && liv.statut !== "ANNULEE" && (
+                    <button
+                      onClick={() => cancelLivraison(liv.id)}
+                      className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
+                    >
+                      Annuler
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {(message || error) && (
+          <div
+            className={`fixed bottom-4 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded shadow-lg transition-all duration-500
+            ${message.startsWith("✅") ? "bg-green-500 text-white" : "bg-red-500 text-white"}`}
+            style={{ zIndex: 1000 }}
           >
-            <div>
-              <p className="font-semibold">Commande : {d.order_id}</p>
-              <p className="text-sm text-gray-600">Livreur : {d.livreur}</p>
-            </div>
-          </li>
-        ))}
-      </ul>
-
-      <button
-        onClick={updateDelivery}
-        className="mt-6 w-full bg-purple-600 text-white py-2 rounded hover:bg-purple-700 transition"
-      >
-        Marquer comme livrée
-      </button>
-
-      {message && <p className="mt-4 text-green-600 text-center">{message}</p>}
-    </div>
+            {message || error}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

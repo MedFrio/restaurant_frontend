@@ -18,7 +18,7 @@ cd restaurant-frontend
 npm install
 ```
 
-## Installation
+## Lancer le projet
 
 ```bash
 npm run dev

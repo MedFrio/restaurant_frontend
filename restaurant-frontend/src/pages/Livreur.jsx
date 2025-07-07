@@ -4,48 +4,98 @@ import { useAuth } from "../context/AuthContext";
 import Header from "../components/Header";
 
 export default function Livreur() {
-  const { clientId, token, firstName } = useAuth();
+  const { clientId } = useAuth();
   const [livreurId, setLivreurId] = useState(() => localStorage.getItem("livreurId"));
   const [livraisons, setLivraisons] = useState([]);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  // Charger ou créer le livreur au montage
   useEffect(() => {
     const initLivreur = async () => {
       try {
-        if (livreurId) return;
+        // Vérifier si le livreur local existe encore
+        if (livreurId) {
+          try {
+            await api.get(`/delivery-api/livreurs/${livreurId}`);
+            return;
+          } catch {
+            localStorage.removeItem("livreurId");
+            setLivreurId(null);
+          }
+        }
 
-        const res = await api.get("/delivery-api/livreurs");
-        const existing = res.data.find(l => l.email === `${clientId}@delivery.com`);
-        if (existing) {
-          localStorage.setItem("livreurId", existing.id);
-          setLivreurId(existing.id);
+        // ==============================================
+        // Récupérer directement le client par son ID
+        // ==============================================
+        let clientInfo = null;
+        try {
+          const resClient = await api.get(`/client-api/clients/${clientId}`);
+          clientInfo = resClient.data;
+        } catch (err) {
+          console.error("❌ Impossible de récupérer le client:", err);
+          setError("❌ Erreur: client introuvable.");
           return;
         }
 
-        const createRes = await api.post("/delivery-api/livreurs", {
-          nom: firstName || "Livreur",
-          prenom: "App",
-          telephone: "+33123456789",
-          email: `${clientId}@delivery.com`,
-          motDePasse: "secret",
+        console.log("✅ Client trouvé:", clientInfo);
+
+        // ==============================================
+        // Préparer les données du livreur à partir du client
+        // ==============================================
+        const livreurData = {
+          nom: clientInfo.firstName,
+          prenom: clientInfo.lastName,
+          telephone: clientInfo.phone,
+          email: clientInfo.email,
+          motDePasse: "secret", 
           vehicule: "Scooter",
           numeroLicence: "AUTO-GEN",
-          adresse: "Depot",
-          ville: "Ville",
-          codePostal: "00000"
-        });
+          adresse: clientInfo.address,
+          ville: clientInfo.city,
+          codePostal: clientInfo.postalCode
+        };
 
-        localStorage.setItem("livreurId", createRes.data.id);
-        setLivreurId(createRes.data.id);
+        // ==============================================
+        // Créer ou recréer le livreur
+        // ==============================================
+        try {
+          const createRes = await api.post("/delivery-api/livreurs", livreurData);
+          console.log(`✅ Livreur créé avec ID ${createRes.data.id}`);
+          localStorage.setItem("livreurId", createRes.data.id);
+          setLivreurId(createRes.data.id);
+
+        } catch (err) {
+          if (err.response && err.response.status === 409) {
+            console.warn("⚠️ Livreur déjà existant, tentative suppression puis recréation");
+
+            const livs = await api.get("/delivery-api/livreurs");
+            const existing = livs.data.find(l => l.email === clientInfo.email);
+
+            if (existing) {
+              await api.delete(`/delivery-api/livreurs/${existing.id}`);
+              console.log(`✅ Ancien livreur ${existing.id} supprimé`);
+
+              const recreateRes = await api.post("/delivery-api/livreurs", livreurData);
+              console.log(`✅ Nouveau livreur recréé avec ID ${recreateRes.data.id}`);
+              localStorage.setItem("livreurId", recreateRes.data.id);
+              setLivreurId(recreateRes.data.id);
+            } else {
+              console.error("❌ Conflit: livreur existe mais introuvable pour suppression");
+              setError("❌ Conflit: impossible de nettoyer automatiquement.");
+            }
+          } else {
+            throw err;
+          }
+        }
+
       } catch (err) {
-        setError("❌ Erreur lors de l'initialisation du livreur");
+        console.error("Erreur initLivreur:", err);
+        setError(`❌ Erreur init livreur: ${err?.response?.data?.message || err.message || "Erreur inconnue"}`);
       }
     };
 
     initLivreur();
-  }, [clientId, livreurId, firstName]);
+  }, [clientId, livreurId]);
 
   const fetchLivraisons = async () => {
     if (!livreurId) return;
@@ -57,28 +107,14 @@ export default function Livreur() {
     }
   };
 
-  const updateLivraison = async (id, newStatus, commandeId = null) => {
+  const updateLivraison = async (id, newStatus) => {
     try {
       const res = await api.patch(`/delivery-api/livraisons/${id}`, {
         statut: newStatus,
         livreurId,
       });
-
       if (res.status === 200) {
         setMessage(`✅ Livraison ${id} → ${newStatus}`);
-
-        // Si la livraison est marquée livrée, notifier la commande
-        if (newStatus === "LIVREE" && commandeId) {
-          try {
-            await api.patch(`/order-api/commandes/${commandeId}/status`, {
-              status: "LIVREE",
-            });
-            setMessage(`✅ Livraison et commande ${commandeId} marquées LIVREE`);
-          } catch {
-            setMessage("⚠ Livraison OK mais échec MAJ commande");
-          }
-        }
-
         fetchLivraisons();
       } else {
         setMessage("❌ Erreur lors de la mise à jour");
@@ -122,14 +158,12 @@ export default function Livreur() {
                     Statut : {liv.statut}
                   </span>
                 </div>
-
                 <div className="text-sm text-gray-700 mb-2">
                   🏠 De : {liv.adresseDepart}<br />
                   🚪 À : {liv.adresseArrivee}<br />
                   📞 Client : {liv.clientNom} ({liv.clientTelephone})<br />
                   💬 {liv.commentaires}
                 </div>
-
                 <div className="flex gap-2 flex-wrap">
                   {liv.statut === "EN_ATTENTE" && (
                     <button
@@ -157,13 +191,12 @@ export default function Livreur() {
                   )}
                   {liv.statut === "EN_ROUTE_CLIENT" && (
                     <button
-                      onClick={() => updateLivraison(liv.id, "LIVREE", liv.commandeId)}
+                      onClick={() => updateLivraison(liv.id, "LIVREE")}
                       className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
                     >
                       Marquer comme livrée
                     </button>
                   )}
-
                   {liv.statut !== "LIVREE" && liv.statut !== "ANNULEE" && (
                     <button
                       onClick={() => cancelLivraison(liv.id)}

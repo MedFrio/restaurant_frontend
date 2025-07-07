@@ -4,13 +4,13 @@ import Header from "../components/Header";
 import { useState, useEffect } from "react";
 
 export default function Accueil() {
-  const { role } = useAuth();
+  const { role } = useAuth(); // Assuming useAuth also provides isAuthenticated if needed elsewhere
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     setIsVisible(true);
-    
+
     const handleMouseMove = (e) => {
       setMousePosition({
         x: (e.clientX / window.innerWidth) * 100,
@@ -61,16 +61,17 @@ export default function Accueil() {
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-      {/* Animated Background */}
-      <div 
-        className="absolute inset-0 opacity-30"
+
+      {/* Animated Background - Add z-index and pointer-events-none */}
+      <div
+        className="absolute inset-0 opacity-30 z-0 pointer-events-none" // <-- AJOUTÉ: z-0 et pointer-events-none
         style={{
           background: `radial-gradient(circle at ${mousePosition.x}% ${mousePosition.y}%, rgba(168, 85, 247, 0.4) 0%, transparent 50%)`
         }}
       />
-      
-      {/* Floating Elements */}
-      <div className="absolute inset-0">
+
+      {/* Floating Elements - Add z-index and pointer-events-none */}
+      <div className="absolute inset-0 z-10 pointer-events-none"> {/* <-- AJOUTÉ: z-10 et pointer-events-none */}
         {[...Array(20)].map((_, i) => (
           <div
             key={i}
@@ -85,9 +86,12 @@ export default function Accueil() {
         ))}
       </div>
 
-      <Header />
-      
-      <div className="relative z-10 max-w-7xl mx-auto py-8 px-4">
+      {/* Main content wrapper, ensure it's above the background elements */}
+      {/* If Header is a child of this div, then this div needs to be z-index higher than background */}
+      {/* If Header is a sibling, Header needs its own z-index higher than background */}
+      {/* Assuming Header is a sibling or is correctly z-indexed within its own component: */}
+      <Header /> {/* Header should have its own z-index, e.g., z-30 or z-40 in its own component */}
+      <div className="relative z-20 max-w-7xl mx-auto py-8 px-4"> {/* <-- AJOUTÉ: z-20 ici */}
         {/* Hero Section */}
         <div className={`text-center mb-16 transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
           <h1 className="text-7xl md:text-8xl font-black mb-8 bg-gradient-to-r from-white via-purple-200 to-cyan-200 bg-clip-text text-transparent animate-pulse">
@@ -103,7 +107,7 @@ export default function Accueil() {
           </p>
         </div>
 
-        {/* Services Grid */}
+        {/* Services Grid (No changes needed for this problem) */}
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
           {services.map((service, index) => (
             <div
@@ -127,7 +131,7 @@ export default function Accueil() {
           ))}
         </div>
 
-        {/* Quick Access */}
+        {/* Quick Access (No changes needed for this problem) */}
         <div className={`bg-black/20 backdrop-blur-xl rounded-3xl p-8 border border-white/20 mb-12 transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
           <h2 className="text-4xl font-bold text-center mb-8 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
             🚀 Accès Rapide
@@ -150,7 +154,7 @@ export default function Accueil() {
           </div>
         </div>
 
-        {/* User Status */}
+        {/* User Status (No changes needed for this problem) */}
         {role && (
           <div className={`relative bg-gradient-to-r from-green-400/20 to-emerald-400/20 backdrop-blur-xl rounded-3xl p-8 border border-green-400/30 text-center overflow-hidden transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
             <div className="absolute inset-0 bg-gradient-to-r from-green-400/10 to-emerald-400/10 animate-pulse" />
@@ -159,8 +163,8 @@ export default function Accueil() {
               <p className="text-2xl mb-4 text-green-100">
                 Vous êtes connecté en tant que : <strong className="text-transparent bg-clip-text bg-gradient-to-r from-green-300 to-emerald-300 capitalize">{role}</strong>
               </p>
-              <Link 
-                to={`/${role}`} 
+              <Link
+                to={`/${role}`}
                 className="inline-block bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold py-4 px-8 rounded-2xl transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-green-500/50"
               >
                 ✨ Accéder à l'espace {role}

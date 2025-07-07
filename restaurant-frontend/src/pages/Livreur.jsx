@@ -13,7 +13,6 @@ export default function Livreur() {
   useEffect(() => {
     const initLivreur = async () => {
       try {
-        // Vérifier si le livreur local existe toujours
         if (livreurId) {
           try {
             await api.get(`/delivery-api/livreurs/${livreurId}`);
@@ -24,9 +23,6 @@ export default function Livreur() {
           }
         }
 
-        // ==============================================
-        // Récupérer directement le client par son ID
-        // ==============================================
         let clientInfo = null;
         try {
           const resClient = await api.get(`/client-api/clients/${clientId}`);
@@ -39,9 +35,6 @@ export default function Livreur() {
 
         console.log("✅ Client trouvé:", clientInfo);
 
-        // ==============================================
-        // Préparer les données du livreur
-        // ==============================================
         const livreurData = {
           nom: clientInfo.firstName,
           prenom: clientInfo.lastName,
@@ -55,56 +48,51 @@ export default function Livreur() {
           codePostal: clientInfo.postalCode
         };
 
-        // ==============================================
-        // Tenter la création initiale
-        // ==============================================
-        try {
-          const createRes = await api.post("/delivery-api/livreurs", livreurData);
-          console.log(`✅ Livreur créé avec ID ${createRes.data.id}`);
-          localStorage.setItem("livreurId", createRes.data.id);
-          setLivreurId(createRes.data.id);
+        // ==================================================
+        // Essai de création avec boucle de retries
+        // ==================================================
+        let success = false;
+        let attempts = 0;
 
-        } catch (err) {
-          if (err.response && err.response.status === 409) {
-            console.warn("⚠️ Livreur déjà existant, tentative suppression puis recréation");
+        while (!success && attempts < 3) {
+          attempts++;
+          console.log(`🚀 Tentative #${attempts} pour créer le livreur`);
 
-            const livs = await api.get("/delivery-api/livreurs");
-            const existing = livs.data.find(l => l.email === clientInfo.email);
+          try {
+            const createRes = await api.post("/delivery-api/livreurs", livreurData);
+            console.log(`✅ Livreur créé avec ID ${createRes.data.id}`);
+            localStorage.setItem("livreurId", createRes.data.id);
+            setLivreurId(createRes.data.id);
+            success = true;
+          } catch (err) {
+            if (err.response && err.response.status === 409) {
+              console.warn("⚠️ Livreur déjà existant, suppression puis retry");
 
-            if (existing) {
-              await api.delete(`/delivery-api/livreurs/${existing.id}`);
-              console.log(`✅ Ancien livreur ${existing.id} supprimé`);
+              const livs = await api.get("/delivery-api/livreurs");
+              const existing = livs.data.find(l => l.email === clientInfo.email);
 
-              // ======================
-              // RETRY AUTOMATIQUE
-              // ======================
-              try {
-                const recreateRes = await api.post("/delivery-api/livreurs", livreurData);
-                console.log(`✅ Nouveau livreur recréé avec ID ${recreateRes.data.id}`);
-                localStorage.setItem("livreurId", recreateRes.data.id);
-                setLivreurId(recreateRes.data.id);
-              } catch (err2) {
-                console.error("❌ Échec première recréation, tentative retry:", err2.response?.data || err2);
-
-                await new Promise(resolve => setTimeout(resolve, 1000));
-
-                try {
-                  const retryRes = await api.post("/delivery-api/livreurs", livreurData);
-                  console.log(`✅ Livreur recréé après retry avec ID ${retryRes.data.id}`);
-                  localStorage.setItem("livreurId", retryRes.data.id);
-                  setLivreurId(retryRes.data.id);
-                } catch (err3) {
-                  console.error("❌ Échec même après retry:", err3.response?.data || err3);
-                  setError("❌ Impossible de recréer le livreur même après retry.");
-                }
+              if (existing) {
+                await api.delete(`/delivery-api/livreurs/${existing.id}`);
+                console.log(`✅ Ancien livreur ${existing.id} supprimé`);
+              } else {
+                console.error("❌ Conflit: livreur existe mais introuvable");
+                break;
               }
+
+              await new Promise(resolve => setTimeout(resolve, 1000));
+            } else if (err.response && err.response.status === 500) {
+              console.warn("⚠️ Erreur serveur, retry dans 1s");
+              await new Promise(resolve => setTimeout(resolve, 1000));
             } else {
-              console.error("❌ Conflit: livreur existe mais introuvable pour suppression");
-              setError("❌ Conflit: impossible de nettoyer automatiquement.");
+              console.error("❌ Erreur création livreur:", err);
+              break;
             }
-          } else {
-            throw err;
           }
+        }
+
+        if (!success) {
+          console.error("❌ Impossible de créer le livreur même après retries, on recharge la page.");
+          window.location.reload();
         }
 
       } catch (err) {

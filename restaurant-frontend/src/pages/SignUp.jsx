@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom"; // Importez useNavigate
+import { useNavigate } from "react-router-dom";
+import { api } from "../api/axiosInstance"; // <--- AJOUTEZ CETTE LIGNE
 
 export default function SignUp() {
-  const navigate = useNavigate(); // Initialisez useNavigate
+  const navigate = useNavigate();
   const [form, setForm] = useState({
     email: "",
     password: "",
@@ -29,14 +30,31 @@ export default function SignUp() {
     setIsLoading(true);
 
     try {
-      // const res = await api.post("/client-api/clients", form);
-      // Simulation for demo
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Décommentez la ligne d'appel API réelle et supprimez la simulation
+      const res = await api.post("/client-api/clients", form); // <-- LIGNE DÉCOMMENTÉE
+
+      console.log("Compte créé avec succès:", res.data); // Pour le débogage
       setSuccess("Compte créé avec succès ! Vous allez être redirigé vers la page de connexion.");
-      setTimeout(() => navigate("/"), 2000); // Décommentez cette ligne pour la redirection
+      setTimeout(() => navigate("/"), 2000);
     } catch (err) {
       console.error("Sign-up error:", err);
-      setError("Erreur : L'email existe déjà ou les données sont invalides.");
+      // Améliorez la gestion des erreurs pour afficher des messages plus spécifiques
+      if (err.response) {
+        // L'API a répondu avec un code d'erreur (ex: 400, 409)
+        if (err.response.status === 409) {
+          setError("Erreur : L'email ou le numéro de téléphone existe déjà.");
+        } else if (err.response.status === 400) {
+          setError(`Erreur de validation : ${err.response.data.message || "Données invalides."}`);
+        } else {
+          setError(`Erreur du serveur : ${err.response.data.message || err.response.statusText}`);
+        }
+      } else if (err.request) {
+        // La requête a été faite mais aucune réponse n'a été reçue (ex: réseau)
+        setError("Erreur réseau : Impossible de joindre le serveur. Vérifiez votre connexion.");
+      } else {
+        // Autre chose s'est produite lors de la configuration de la requête
+        setError(`Erreur inattendue : ${err.message}`);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -118,7 +136,6 @@ export default function SignUp() {
                   value={form.firstName}
                   onChange={handleChange}
                   placeholder="Votre prénom"
-                  // Added !bg-white and !text-gray-900 for stronger override
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-300 !bg-white !text-gray-900"
                   required
                 />
@@ -134,7 +151,6 @@ export default function SignUp() {
                   value={form.lastName}
                   onChange={handleChange}
                   placeholder="Votre nom"
-                  // Added !bg-white and !!text-gray-900 for stronger override
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-300 !bg-white !text-gray-900"
                   required
                 />
@@ -148,15 +164,14 @@ export default function SignUp() {
                 Adresse Email
               </label>
               <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={form.email}
-                  onChange={handleChange}
-                  placeholder="exemple@votredomaine.com"
-                  // Added !bg-white and !text-gray-900 for stronger override
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-300 !bg-white !text-gray-900"
-                  required
+                id="email"
+                name="email"
+                type="email"
+                value={form.email}
+                onChange={handleChange}
+                placeholder="exemple@votredomaine.com"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-300 !bg-white !text-gray-900"
+                required
               />
             </div>
 
@@ -167,15 +182,14 @@ export default function SignUp() {
                 Mot de passe
               </label>
               <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  value={form.password}
-                  onChange={handleChange}
-                  placeholder="Minimum 6 caractères"
-                  // Added !bg-white and !text-gray-900 for stronger override
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-300 !bg-white !text-gray-900"
-                  required
+                id="password"
+                name="password"
+                type="password"
+                value={form.password}
+                onChange={handleChange}
+                placeholder="Minimum 6 caractères"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-300 !bg-white !text-gray-900"
+                required
               />
             </div>
 
@@ -186,14 +200,13 @@ export default function SignUp() {
                 Téléphone
               </label>
               <input
-                  id="phone"
-                  name="phone"
-                  type="tel"
-                  value={form.phone}
-                  onChange={handleChange}
-                  placeholder="Ex: 06 12 34 56 78"
-                  // Added !bg-white and !text-gray-900 for stronger override
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-300 !bg-white !text-gray-900"
+                id="phone"
+                name="phone"
+                type="tel"
+                value={form.phone}
+                onChange={handleChange}
+                placeholder="Ex: 06 12 34 56 78"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-300 !bg-white !text-gray-900"
               />
             </div>
 
@@ -204,13 +217,12 @@ export default function SignUp() {
                 Adresse
               </label>
               <input
-                  id="address"
-                  name="address"
-                  value={form.address}
-                  onChange={handleChange}
-                  placeholder="Numéro et nom de rue"
-                  // Added !bg-white and !text-gray-900 for stronger override
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-300 !bg-white !text-gray-900"
+                id="address"
+                name="address"
+                value={form.address}
+                onChange={handleChange}
+                placeholder="Numéro et nom de rue"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-300 !bg-white !text-gray-900"
               />
             </div>
 
@@ -227,7 +239,6 @@ export default function SignUp() {
                   value={form.city}
                   onChange={handleChange}
                   placeholder="Votre ville"
-                  // Added !bg-white and !text-gray-900 for stronger override
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-300 !bg-white !text-gray-900"
                 />
               </div>
@@ -242,7 +253,6 @@ export default function SignUp() {
                   value={form.postalCode}
                   onChange={handleChange}
                   placeholder="Ex: 75000"
-                  // Added !bg-white and !text-gray-900 for stronger override
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-300 !bg-white !text-gray-900"
                 />
               </div>
@@ -260,10 +270,8 @@ export default function SignUp() {
                   name="role"
                   value={form.role}
                   onChange={handleChange}
-                  // Added !bg-white and !text-gray-900 for stronger override
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-300 !bg-white !text-gray-900 appearance-none cursor-pointer"
                 >
-                  {/* Options also get !text-gray-900 for explicit color */}
                   <option value="CLIENT" className="!text-gray-900">👤 Client</option>
                   <option value="CHEF" className="!text-gray-900">👨‍🍳 Chef</option>
                   <option value="LIVREUR" className="!text-gray-900">🚚 Livreur</option>
@@ -309,9 +317,10 @@ export default function SignUp() {
             </div>
             <p className="text-gray-600">
               Vous avez déjà un compte ?{" "}
-              <a 
-                href="#" 
+              <a
+                href="#"
                 className="text-violet-600 font-semibold hover:text-violet-700 transition-colors duration-300 hover:underline"
+                onClick={(e) => { e.preventDefault(); navigate("/"); }} // Ajouté pour gérer la navigation vers la page de connexion
               >
                 Connectez-vous ici
               </a>

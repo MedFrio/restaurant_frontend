@@ -1,7 +1,8 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom"; // Importez useNavigate
 
 export default function SignUp() {
-  // const navigate = useNavigate();
+  const navigate = useNavigate(); // Initialisez useNavigate
   const [form, setForm] = useState({
     email: "",
     password: "",
@@ -32,7 +33,7 @@ export default function SignUp() {
       // Simulation for demo
       await new Promise(resolve => setTimeout(resolve, 1500));
       setSuccess("Compte créé avec succès ! Vous allez être redirigé vers la page de connexion.");
-      // setTimeout(() => navigate("/"), 2000);
+      setTimeout(() => navigate("/"), 2000); // Décommentez cette ligne pour la redirection
     } catch (err) {
       console.error("Sign-up error:", err);
       setError("Erreur : L'email existe déjà ou les données sont invalides.");
@@ -133,7 +134,7 @@ export default function SignUp() {
                   value={form.lastName}
                   onChange={handleChange}
                   placeholder="Votre nom"
-                  // Added !bg-white and !text-gray-900 for stronger override
+                  // Added !bg-white and !!text-gray-900 for stronger override
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-300 !bg-white !text-gray-900"
                   required
                 />

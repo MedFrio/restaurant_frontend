@@ -22,7 +22,7 @@ export default function SignUp() {
     setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
-    e.preventDefault(); // Moved onSubmit to the <form> element
+    e.preventDefault();
     setError("");
     setSuccess("");
     setIsLoading(true);
@@ -103,7 +103,7 @@ export default function SignUp() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6"> {/* onSubmit moved here */}
+          <form onSubmit={handleSubmit} className="space-y-6">
             {/* Name fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -117,7 +117,8 @@ export default function SignUp() {
                   value={form.firstName}
                   onChange={handleChange}
                   placeholder="Votre prénom"
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-300 bg-white/80 backdrop-blur-sm"
+                  // Added !bg-white and !text-gray-900 for stronger override
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-300 !bg-white !text-gray-900"
                   required
                 />
               </div>
@@ -132,7 +133,8 @@ export default function SignUp() {
                   value={form.lastName}
                   onChange={handleChange}
                   placeholder="Votre nom"
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-300 bg-white/80 backdrop-blur-sm"
+                  // Added !bg-white and !text-gray-900 for stronger override
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-300 !bg-white !text-gray-900"
                   required
                 />
               </div>
@@ -145,14 +147,15 @@ export default function SignUp() {
                 Adresse Email
               </label>
               <input
-                id="email"
-                name="email"
-                type="email"
-                value={form.email}
-                onChange={handleChange}
-                placeholder="exemple@votredomaine.com"
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-300 bg-white/80 backdrop-blur-sm"
-                required
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={form.email}
+                  onChange={handleChange}
+                  placeholder="exemple@votredomaine.com"
+                  // Added !bg-white and !text-gray-900 for stronger override
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-300 !bg-white !text-gray-900"
+                  required
               />
             </div>
 
@@ -163,14 +166,15 @@ export default function SignUp() {
                 Mot de passe
               </label>
               <input
-                id="password"
-                name="password"
-                type="password"
-                value={form.password}
-                onChange={handleChange}
-                placeholder="Minimum 6 caractères"
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-300 bg-white/80 backdrop-blur-sm"
-                required
+                  id="password"
+                  name="password"
+                  type="password"
+                  value={form.password}
+                  onChange={handleChange}
+                  placeholder="Minimum 6 caractères"
+                  // Added !bg-white and !text-gray-900 for stronger override
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-300 !bg-white !text-gray-900"
+                  required
               />
             </div>
 
@@ -181,13 +185,14 @@ export default function SignUp() {
                 Téléphone
               </label>
               <input
-                id="phone"
-                name="phone"
-                type="tel"
-                value={form.phone}
-                onChange={handleChange}
-                placeholder="Ex: 06 12 34 56 78"
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-300 bg-white/80 backdrop-blur-sm"
+                  id="phone"
+                  name="phone"
+                  type="tel"
+                  value={form.phone}
+                  onChange={handleChange}
+                  placeholder="Ex: 06 12 34 56 78"
+                  // Added !bg-white and !text-gray-900 for stronger override
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-300 !bg-white !text-gray-900"
               />
             </div>
 
@@ -198,12 +203,13 @@ export default function SignUp() {
                 Adresse
               </label>
               <input
-                id="address"
-                name="address"
-                value={form.address}
-                onChange={handleChange}
-                placeholder="Numéro et nom de rue"
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-300 bg-white/80 backdrop-blur-sm"
+                  id="address"
+                  name="address"
+                  value={form.address}
+                  onChange={handleChange}
+                  placeholder="Numéro et nom de rue"
+                  // Added !bg-white and !text-gray-900 for stronger override
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-300 !bg-white !text-gray-900"
               />
             </div>
 
@@ -220,7 +226,8 @@ export default function SignUp() {
                   value={form.city}
                   onChange={handleChange}
                   placeholder="Votre ville"
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-300 bg-white/80 backdrop-blur-sm"
+                  // Added !bg-white and !text-gray-900 for stronger override
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-300 !bg-white !text-gray-900"
                 />
               </div>
               <div className="space-y-2">
@@ -234,7 +241,8 @@ export default function SignUp() {
                   value={form.postalCode}
                   onChange={handleChange}
                   placeholder="Ex: 75000"
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-300 bg-white/80 backdrop-blur-sm"
+                  // Added !bg-white and !text-gray-900 for stronger override
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-300 !bg-white !text-gray-900"
                 />
               </div>
             </div>
@@ -251,14 +259,14 @@ export default function SignUp() {
                   name="role"
                   value={form.role}
                   onChange={handleChange}
-                  // Added text-gray-900 directly to the select for consistent text color
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-300 bg-white/80 backdrop-blur-sm appearance-none cursor-pointer text-gray-900"
+                  // Added !bg-white and !text-gray-900 for stronger override
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-300 !bg-white !text-gray-900 appearance-none cursor-pointer"
                 >
-                  {/* Added text-gray-900 to each option for explicit text color */}
-                  <option value="CLIENT" className="text-gray-900">👤 Client</option>
-                  <option value="CHEF" className="text-gray-900">👨‍🍳 Chef</option>
-                  <option value="LIVREUR" className="text-gray-900">🚚 Livreur</option>
-                  <option value="ADMIN" className="text-gray-900">👑 Administrateur</option>
+                  {/* Options also get !text-gray-900 for explicit color */}
+                  <option value="CLIENT" className="!text-gray-900">👤 Client</option>
+                  <option value="CHEF" className="!text-gray-900">👨‍🍳 Chef</option>
+                  <option value="LIVREUR" className="!text-gray-900">🚚 Livreur</option>
+                  <option value="ADMIN" className="!text-gray-900">👑 Administrateur</option>
                 </select>
                 <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
                   <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
